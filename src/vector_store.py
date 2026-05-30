@@ -24,3 +24,10 @@ def load_vector_db():
     )
 
     return vector_db
+
+def delete_document_vectors(filename: str):
+    vector_db = load_vector_db()
+
+    vector_db.delete(
+        where={"filename": filename}
+    )

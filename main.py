@@ -4,6 +4,7 @@ import shutil
 from src.loader import load_pdf
 from src.chunking import chunk_documents
 from src.vector_store import save_to_vector_db
+from src.vector_store import delete_document_vectors
 from schema.rag import QuestionRequest
 from src.rag import ask_question
 
@@ -27,6 +28,9 @@ def upload_pdf(file: UploadFile = File(...)):
     documents = load_pdf(file_path)
 
     chunks = chunk_documents(documents)
+    #
+    for chunk in chunks:
+        chunk.metadata["filename"] = file.filename
 
     save_to_vector_db(chunks)
 
@@ -55,8 +59,14 @@ def list_documents():
 def delete_document(filename: str):
     file_path = os.path.join(UPLOAD_DIR, filename)
 
-    if os.path.exists(file_path):
-        os.remove(file_path)
-        return {"message": "Document deleted", "filename": filename}
+    if not os.path.exists(file_path):
+        return {"message": "Document not found"}
 
-    return {"message": "Document not found"}
+    os.remove(file_path)
+
+    delete_document_vectors(filename)
+
+    return {
+        "message": "Document and its vectors deleted successfully",
+        "filename": filename
+    }
