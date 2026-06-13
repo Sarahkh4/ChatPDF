@@ -9,3 +9,4 @@ sentence-transformers
 langchain-text-splitters
 langchain-chroma
 langchain-openai
+redis
