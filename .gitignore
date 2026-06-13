@@ -10,6 +10,11 @@ wheels/
 .venv
 /uploads
 /vector_db
+/app_data
 .env
 RAG_Documentation.md
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
 

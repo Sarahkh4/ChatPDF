@@ -1,62 +1,39 @@
-from fastapi import FastAPI, UploadFile, File
-import os
-import shutil
-from src.loader import load_pdf
-from src.chunking import chunk_documents
-from src.vector_store import save_to_vector_db
-from schema.rag import QuestionRequest
-from src.rag import ask_question
+from contextlib import asynccontextmanager
 
-app = FastAPI()
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
-UPLOAD_DIR = "uploads"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-
-@app.get("/")
-def home():
-    return {"message": "ChatPDF RAG API is running"}
+from routes import auth_router, chats_router, health_router
+from src.chat_store import init_db
+from src.document_service import ensure_upload_dir
+from src.logging_config import configure_logging, get_logger
 
 
-@app.post("/upload")
-def upload_pdf(file: UploadFile = File(...)):
-    file_path = os.path.join(UPLOAD_DIR, file.filename)
-
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-
-    documents = load_pdf(file_path)
-
-    chunks = chunk_documents(documents)
-
-    save_to_vector_db(chunks)
-
-    return {
-        "message": "PDF uploaded, processed, and stored in vector DB",
-        "filename": file.filename,
-        "total_pages": len(documents),
-        "total_chunks": len(chunks)
-    }
+configure_logging()
+logger = get_logger(__name__)
 
 
-@app.post("/ask")
-def ask(request: QuestionRequest):
-    response = ask_question(request.question)
-    return response
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    ensure_upload_dir()
+    logger.info("Application started and storage initialized")
+    yield
 
-@app.get("/documents")
-def list_documents():
-    files = os.listdir(UPLOAD_DIR)
 
-    return {
-        "documents": files
-    }
+app = FastAPI(lifespan=lifespan)
 
-@app.delete("/documents/{filename}")
-def delete_document(filename: str):
-    file_path = os.path.join(UPLOAD_DIR, filename)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-    if os.path.exists(file_path):
-        os.remove(file_path)
-        return {"message": "Document deleted", "filename": filename}
-
-    return {"message": "Document not found"}
+app.include_router(health_router)
+app.include_router(auth_router)
+app.include_router(chats_router)

@@ -4,8 +4,8 @@ from langchain.chat_models import init_chat_model
 
 load_dotenv()
 
-api_key= os.getenv("OPENAI_API_KEY")
-base_url = os.getenv("BASE_URL")
+api_key = os.getenv("OPENAI_API_KEY")
+base_url = os.getenv("OPENAI_BASE_URL")
 
 llm = init_chat_model(
     model = "gpt-4o-mini",
