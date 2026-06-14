@@ -1,4 +1,36 @@
 services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chatpdf-backend
+    env_file:
+      - .env
+    environment:
+      APP_DATA_DIR: /app/app_data
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      HF_HOME: /app/.cache/huggingface
+    ports:
+      - "8000:8000"
+    volumes:
+      - app_data:/app/app_data
+      - uploads_data:/app/uploads
+      - vector_data:/app/vector_db
+      - huggingface_cache:/app/.cache/huggingface
+    depends_on:
+      - redis
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: chatpdf-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
   redis:
     image: redis/redis-stack:latest
     container_name: chatpdf-redis
@@ -9,4 +41,8 @@ services:
       - redis_data:/data
 
 volumes:
+  app_data:
+  uploads_data:
+  vector_data:
+  huggingface_cache:
   redis_data:

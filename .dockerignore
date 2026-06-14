@@ -1,0 +1,13 @@
+.git
+.venv
+__pycache__
+*.pyc
+.env
+app_data
+uploads
+vector_db
+frontend
+frontend/node_modules
+frontend/dist
+frontend/.vite
+RAG_Documentation.md
