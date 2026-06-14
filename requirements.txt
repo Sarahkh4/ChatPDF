@@ -9,4 +9,6 @@ sentence-transformers
 langchain-text-splitters
 langchain-chroma
 langchain-openai
+langchain-huggingface
 redis
+python-dotenv
